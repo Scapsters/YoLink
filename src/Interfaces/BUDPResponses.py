@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import List
+
+from src.Interfaces.Device import Device
+
 
 class BUDPResponse(ABC):
     """
@@ -9,6 +13,52 @@ class BUDPResponse(ABC):
     def __init__(self, data: dict):
         pass
 
+def create_response(sensor_type: str, method: str, data: dict) -> BUDPResponse:
+    """
+    Factory method to create a BUDPResponse object based on the sensor type and method.
+
+    Args:
+    sensor_type (str): The type of sensor.
+    method (str): The method used to get the data.
+    data (dict): The data to be used to create the response.
+
+    Returns:
+    BUDPResponse: The response object.
+    """
+    response_classes = {
+        ("THSensor", "getState"): THSensorGetStateData,
+        ("WaterMeterController", "getState"): WaterMeterControllerGetStateData,
+        ("DoorSensor", "getState"): DoorSensorGetStateData,
+        ("InfraredRemoter", "getState"): InfraredRemoterGetStateData,
+        ("MultiOutlet", "getState"): MultiOutletGetStateData,
+        ("Lock", "getState"): LockGetStateData,
+        ("Outlet", "getState"): OutletGetStateData,
+        ("SpeakerHub", "getState"): SpeakerHubGetStateData,
+        ("Manipulator", "getState"): ManipulatorGetStateData,
+        ("VibrationSensor", "getState"): VibrationSensorGetStateData,
+        ("MotionSensor", "getState"): MotionSensorGetStateData,
+        ("SmartRemoter", "getState"): SmartRemoterGetStateData,
+        ("Hub", "getState"): HubGetStateData,
+        ("LeakSensor", "getState"): LeakSensorGetStateData,
+        ("Switch", "getState"): SwitchGetStateData,
+    }
+
+    try:
+        return response_classes[(sensor_type, method)](data)
+    except KeyError:
+        raise ValueError("Unknown sensor type or method.")
+
+class HubGetDeviceListResponse(BUDPResponse):
+    """
+    Represents the response of the Hub.getDeviceList method in the YoLink API.
+
+    Attributes:
+        devices (List[DeviceInfo]): List of devices connected to the hub.
+    """
+
+    def __init__(self, data: dict):
+        self.devices: List[Device] = [Device(device) for device in data["devices"]]   
+           
 class THSensorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -44,7 +94,6 @@ class THSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]
-
 class WaterMeterControllerGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -117,7 +166,6 @@ class WaterMeterControllerGetStateData(BUDPResponse):
         self.temperature: float = data["temperature"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]
-
 class DoorSensorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -142,7 +190,6 @@ class DoorSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]
-
 class InfraredRemoterGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -159,7 +206,6 @@ class InfraredRemoterGetStateData(BUDPResponse):
         self.keys: list[bool] = data["keys"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]
-
 class MultiOutletGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -177,8 +223,7 @@ class MultiOutletGetStateData(BUDPResponse):
         self.delays_on: int = data["delays"][0]["on"]
         self.delays_off: int = data["delays"][0]["off"]
         self.version: str = data["version"]
-        self.tz: int = data["tz"]
-        
+        self.tz: int = data["tz"]      
 class LockGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -194,8 +239,7 @@ class LockGetStateData(BUDPResponse):
         self.state: str = data["state"]["state"]
         self.battery: int = data["state"]["battery"]
         self.version: str = data["version"]
-        self.tz: int = data["tz"]
-        
+        self.tz: int = data["tz"]    
 class OutletGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -215,8 +259,7 @@ class OutletGetStateData(BUDPResponse):
         self.delay_off: int = data["delay"]["off"]
         self.power: int | None = data.get("power")
         self.version: str = data["version"]
-        self.tz: int = data["tz"]
-        
+        self.tz: int = data["tz"]     
 class SpeakerHubGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -244,8 +287,7 @@ class SpeakerHubGetStateData(BUDPResponse):
         self.eth_enable: bool = data["eth"]["enable"]
         self.options_volume: int = data["options"]["volume"]
         self.options_enableBeep: bool = data["options"]["enableBeep"]
-        self.options_mute: bool = data["options"]["mute"]
-        
+        self.options_mute: bool = data["options"]["mute"]     
 class ManipulatorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -265,8 +307,7 @@ class ManipulatorGetStateData(BUDPResponse):
         self.delay_off: int | None = data["delay"].get("off")
         self.openRemind: int | None = data.get("openRemind")
         self.version: str = data["version"]
-        self.tz: int = data["tz"]
-        
+        self.tz: int = data["tz"]     
 class VibrationSensorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -290,8 +331,7 @@ class VibrationSensorGetStateData(BUDPResponse):
         self.noVibrationDelay: int | None = data["state"].get("noVibrationDelay")
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
-        self.deviceId: str = data["deviceId"]
-        
+        self.deviceId: str = data["deviceId"]     
 class MotionSensorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -317,8 +357,7 @@ class MotionSensorGetStateData(BUDPResponse):
         self.nomotionDelay: int | None = data["state"].get("nomotionDelay")
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
-        self.deviceId: str = data["deviceId"]
-        
+        self.deviceId: str = data["deviceId"]    
 class SmartRemoterGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -340,8 +379,7 @@ class SmartRemoterGetStateData(BUDPResponse):
         self.battery: int = data["state"]["battery"]
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
-        self.deviceId: str = data["deviceId"]
-        
+        self.deviceId: str = data["deviceId"]     
 class HubGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -369,8 +407,7 @@ class HubGetStateData(BUDPResponse):
         self.eth_enable: bool = data["eth"]["enable"]
         self.eth_ip: str = data["eth"]["ip"]
         self.eth_gateway: str = data["eth"]["gateway"]
-        self.eth_mask: str = data["eth"]["mask"]
-        
+        self.eth_mask: str = data["eth"]["mask"]      
 class LeakSensorGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -392,8 +429,7 @@ class LeakSensorGetStateData(BUDPResponse):
         self.interval: int | None = data["state"].get("interval")
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
-        self.deviceId: str = data["deviceId"]
-        
+        self.deviceId: str = data["deviceId"]      
 class SwitchGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
@@ -411,8 +447,7 @@ class SwitchGetStateData(BUDPResponse):
         self.delay_on: int = data["delay"]["on"]
         self.delay_off: int = data["delay"]["off"]
         self.version: str = data["version"]
-        self.tz: int = data["tz"]
-        
+        self.tz: int = data["tz"]     
 class LockGetStateData(BUDPResponse):
     """
     Represents the data of a BUDP data packet for the YoLink API.
