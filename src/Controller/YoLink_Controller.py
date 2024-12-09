@@ -6,7 +6,22 @@ TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
 
 class YoLinkController:
-	
+	"""
+	A controller for the YoLink API. Handles requests to the API and manages access tokens.
+ 
+	Methods:
+		establish_access_token: Establishes an access token for the YoLink API. If a token already exists, it will be refreshed if it is expired.
+		create_tokens: Creates access and refresh tokens from the YoLink API. Updates the controller's token variables.
+		make_request: Makes a request to the YoLink API with the given parameters. Returns the data from the response.
+		get_timestamp: Returns the current timestamp
+   
+	Attributes:
+		user_id (str): The user ID for the YoLink API.
+		user_key (str): The user key for the YoLink API.
+		access_token (str): The access token for the YoLink API.
+		refresh_token (str): The refresh token for the YoLink API.
+		token_expiration_time (int): The time at which the access token will expire.
+	"""
 	def __init__(self):
 		"""
 		Initialize a YoLink API Controller. Also attempts to establish an access token.
