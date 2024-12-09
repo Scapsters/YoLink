@@ -2,8 +2,14 @@ import requests
 import json
 from datetime import datetime
 
+from Interfaces.Device import Device
+
+from Interfaces.BUDPResponses import BUDPResponse, create_response
+from Interfaces.Device import Device
+
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
+NO_DEVICE = "No Device"
 
 class YoLinkController:
 	"""
@@ -77,15 +83,14 @@ class YoLinkController:
 		self.token_expiration_time = response["expires_in"] + self.get_timestamp()
 	
 	# Follows BDDP property list at http://doc.yosmart.com/docs/protocol/datapacket/#BDDP
-	def make_request(self, method_name: str, msgid: str | None = None, target_device = None, token = None, params = None) -> dict:
+	def make_request(self, method_name: str, msgid: str | None = None, device: Device | None = None, params = None) -> BUDPResponse:
 		"""
 		Makes a request to the YoLink API with the given parameters. Returns the data from the response.
 
 		Args:
 			method_name     (str):                Target function (Defined in YoLink API Documentation).
-			msgid           (_type_, optional):   Message ID. Defaults to None and the API will generate one.
-			target_device   (_type_, optional):   DeviceID of the sensor. Required when calling a sensor specific method.
-			token 			(_type_, optional):   Device Token of the sensor. Required when sending a message to the device.
+			msgid           (str, optional):   	  Message ID. Defaults to None and the API will generate one.
+			target_device   (Device, optional):   The Device. Used for deviceID and Token
 			params 			(_type_, optional):   Parameters. Required when specified by the method.
 
 		Raises:
@@ -93,7 +98,7 @@ class YoLinkController:
 			ConnectionError: There was an error connecting to the YoLink API. The error message will specify the error code.
 
 		Returns:
-			dict: the data from the response.
+			BUDPResponse: An object representing the data from the response.
 		"""
 		# Setup data
 		headers = {
@@ -104,8 +109,8 @@ class YoLinkController:
 			"method": method_name,
 			"time": self.get_timestamp(),
 			"msgid": msgid,
-			"targetDevice": target_device,
-			"token": token,
+			"targetDevice": device.deviceId if device else None,
+			"token": device.token if device else None,
 			"params": params
 		})
 		
@@ -113,7 +118,7 @@ class YoLinkController:
 		response = requests.post(API_URL, headers=headers, data=data).json()
 		if response["code"] != "000000":
 			raise ConnectionError(f'code {response["code"]}')
-		return response["data"]
+		return create_response(device.type if device else NO_DEVICE, method_name, response["data"])
 
 	def get_timestamp(self) -> int:
 		return int(datetime.now().timestamp())

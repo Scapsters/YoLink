@@ -1,17 +1,15 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List
 
-from src.Interfaces.Device import Device
-
+from Interfaces.Device import Device
 
 class BUDPResponse(ABC):
     """
     Abstract class for BUDP responses of various sensor types.
     """
 
-    @abstractmethod
     def __init__(self, data: dict):
-        pass
+        self.data = data
 
 def create_response(sensor_type: str, method: str, data: dict) -> BUDPResponse:
     """
@@ -25,30 +23,41 @@ def create_response(sensor_type: str, method: str, data: dict) -> BUDPResponse:
     Returns:
     BUDPResponse: The response object.
     """
-    response_classes = {
-        ("THSensor", "getState"): THSensorGetStateData,
-        ("WaterMeterController", "getState"): WaterMeterControllerGetStateData,
-        ("DoorSensor", "getState"): DoorSensorGetStateData,
-        ("InfraredRemoter", "getState"): InfraredRemoterGetStateData,
-        ("MultiOutlet", "getState"): MultiOutletGetStateData,
-        ("Lock", "getState"): LockGetStateData,
-        ("Outlet", "getState"): OutletGetStateData,
-        ("SpeakerHub", "getState"): SpeakerHubGetStateData,
-        ("Manipulator", "getState"): ManipulatorGetStateData,
-        ("VibrationSensor", "getState"): VibrationSensorGetStateData,
-        ("MotionSensor", "getState"): MotionSensorGetStateData,
-        ("SmartRemoter", "getState"): SmartRemoterGetStateData,
-        ("Hub", "getState"): HubGetStateData,
-        ("LeakSensor", "getState"): LeakSensorGetStateData,
-        ("Switch", "getState"): SwitchGetStateData,
+    print(sensor_type, method)
+    response_classes: dict[tuple[str, str], type] = {
+        ("THSensor", "THSensor.getState"): THSensorGetStateData,
+        ("WaterMeterController", "WaterMeterController.getState"): WaterMeterControllerGetStateData,
+        ("DoorSensor", "DoorSensor.getState"): DoorSensorGetStateData,
+        ("InfraredRemoter", "InfraredRemoter.getState"): InfraredRemoterGetStateData,
+        ("MultiOutlet", "MultiOutlet.getState"): MultiOutletGetStateData,
+        ("Lock", "Lock.getState"): LockGetStateData,
+        ("Outlet", "Outlet.getState"): OutletGetStateData,
+        ("SpeakerHub", "SpeakerHub.getState"): SpeakerHubGetStateData,
+        ("Manipulator", "Manipulator.getState"): ManipulatorGetStateData,
+        ("VibrationSensor", "VibrationSensor.getState"): VibrationSensorGetStateData,
+        ("MotionSensor", "MotionSensor.getState"): MotionSensorGetStateData,
+        ("SmartRemoter", "SmartRemoter.getState"): SmartRemoterGetStateData,
+        ("Hub", "Hub.getState"): HubGetStateData,
+        ("LeakSensor", "LeakSensor.getState"): LeakSensorGetStateData,
+        ("Switch", "Switch.getState"): SwitchGetStateData,
+        ("No Device", "Home.getDeviceList"): HomeGetDeviceListData,
     }
 
     try:
         return response_classes[(sensor_type, method)](data)
     except KeyError:
         raise ValueError("Unknown sensor type or method.")
+class HomeGetDeviceListData(BUDPResponse):
+    """
+    Represents the response of the Home.getDeviceList method in the YoLink API.
 
-class HubGetDeviceListResponse(BUDPResponse):
+    Attributes:
+        devices (List[DeviceInfo]): List of devices connected to the hub.
+    """
+
+    def __init__(self, data: dict):
+        self.devices: List[Device] = [Device(device_data) for device_data in data]
+class HubGetDeviceListData(BUDPResponse):
     """
     Represents the response of the Hub.getDeviceList method in the YoLink API.
 
@@ -364,8 +373,8 @@ class SmartRemoterGetStateData(BUDPResponse):
 
     Attributes:
         event                (Optional[dict]) : The last reported event.
-        event_keyMask        (int)            : Triggered keys of event. Bits 0-7 means keys 0-7.
-        event_type           (str)            : The type of event, ["Press", "LongPress"].
+        event_keyMask        (Optional[int])            : Triggered keys of event. Bits 0-7 means keys 0-7.
+        event_type           (Optional[str])            : The type of event, ["Press", "LongPress"].
         battery              (int)            : Level of device's battery, 0 to 4 means empty to full.
         version              (str)            : Firmware Version of device.
         reportAt             (str)            : Time of reported.
@@ -374,8 +383,8 @@ class SmartRemoterGetStateData(BUDPResponse):
 
     def __init__(self, data: dict):
         self.event: dict | None = data["state"].get("event")
-        self.event_keyMask: int = data["state"]["event"]["keyMask"] if self.event else None
-        self.event_type: str = data["state"]["event"]["type"] if self.event else None
+        self.event_keyMask: int | None = data["state"]["event"]["keyMask"] if self.event else None
+        self.event_type: str | None = data["state"]["event"]["type"] if self.event else None
         self.battery: int = data["state"]["battery"]
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
@@ -448,19 +457,3 @@ class SwitchGetStateData(BUDPResponse):
         self.delay_off: int = data["delay"]["off"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]     
-class LockGetStateData(BUDPResponse):
-    """
-    Represents the data of a BUDP data packet for the YoLink API.
-
-    Attributes:
-        state                (str)  : State of lock, ["locked", "unlocked"].
-        battery              (int)  : Level of device's battery, 0 to 4 means empty to full.
-        version              (str)  : Firmware Version of device.
-        tz                   (int)  : Timezone of device. -12 ~ 12.
-    """
-
-    def __init__(self, data: dict):
-        self.state: str = data["state"]["state"]
-        self.battery: int = data["state"]["battery"]
-        self.version: str = data["version"]
-        self.tz: int = data["tz"]

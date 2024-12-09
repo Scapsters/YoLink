@@ -1,7 +1,9 @@
 from collections import OrderedDict
-import src.Controller.YoLink_Controller as YoLink_Controller
-from src.Controller.YoLink_Controller import YoLinkController
-from src.Api.persistence import save
+from typing import Dict
+from Controller.YoLink_Controller import YoLinkController
+from Api.persistence import save
+from Interfaces.BUDPResponses import HomeGetDeviceListData, THSensorGetStateData
+from Interfaces.Device import Device
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
@@ -14,16 +16,16 @@ SENSORS_WITH_DEWPOINT = {"THSensor"}
 def main() -> None:
     
     # Establish connection to YoLink API
-    controller: YoLinkController = YoLink_Controller.YoLinkController()
+    controller: YoLinkController = YoLinkController()
     
     # Get connected devices
-    devices_data: dict = controller.make_request("Home.getDeviceList")
-    devices: list = devices_data["devices"]
+    devices_data = HomeGetDeviceListData(controller.make_request("Home.getDeviceList")).data # TODO This should be casting not constructing
+    devices: list[Device] = devices_data.devices
     
     # Create a list of every type of device
     device_types = set()
     for device in devices:
-        device_types.add(device["type"])
+        device_types.add(device.type)
     
     # Create a dictionary in the format {deviceType: deviceInfo[]}
     devices_sorted = create_sorted_device_list(devices, device_types)
@@ -34,7 +36,7 @@ def main() -> None:
     
     poll_sensors(devices_sorted["THSensor"], controller)
 
-def print_device_list(devices: list):
+def print_device_list(devices: list[Device]) -> None:
     '''
     Print the device list in a formatted table.
     
@@ -49,14 +51,14 @@ def print_device_list(devices: list):
 
     for device in devices:
         device_information = [
-            device["type"], 
-            device["name"], 
-            device["deviceId"]
+            device.type, 
+            device.name, 
+            device.deviceId
         ]
         print("{: <20} {: <40} {: <30}".format(*device_information))
 
 # Given a list of json DBUPs representing devices and a set of each device type present, creates a list for each device type
-def create_sorted_device_list(devices: list, device_types: set):
+def create_sorted_device_list(devices: list[Device], device_types: set[str]) -> Dict[str, list[Device]]:
     '''
     Create a dictionary in the format {deviceType: deviceInfo[]} from a list of devices.
     
@@ -68,7 +70,7 @@ def create_sorted_device_list(devices: list, device_types: set):
         dict: A dictionary in the format {deviceType: deviceInfo[]}.
     '''
     
-    devices_sorted_type: dict = {}
+    devices_sorted_type: Dict[str, list[Device]] = {}
     
     # Create entries for each type
     for device_type in device_types:
@@ -76,11 +78,11 @@ def create_sorted_device_list(devices: list, device_types: set):
     
     # Populate entries
     for device in devices:
-        devices_sorted_type[device["type"]].append(device)
+        devices_sorted_type[device.type].append(device)
     
     return devices_sorted_type
 
-def poll_sensors(sensors: list, controller: YoLinkController):
+def poll_sensors(sensors: list[Device], controller: YoLinkController):
     '''
     Not final.
     Poll the sensors and print the data. Only works for THSensors currently.
@@ -92,17 +94,16 @@ def poll_sensors(sensors: list, controller: YoLinkController):
     print("{: ^35} {: ^6} {: ^6} {: ^6}".format(*column_titles))
         
     for sensor in sensors:
-        sensor_data = controller.make_request(
-            method_name = "THSensor.getState", 
-            target_device = sensor["deviceId"],
-            token = sensor["token"]
+        sensor_data: THSensorGetStateData = controller.make_request(
+            method_name = "getState", 
+            device = sensor
         )
         
         # Access, process, and show data
-        temperature = sensor_data["state"]["temperature"]
-        humidity = sensor_data["state"]["humidity"]
+        temperature = sensor_data.temperature
+        humidity = sensor_data.humidity
         information = OrderedDict({ # Use an ordered dict to maintain order in csv file
-            "name": sensor["name"], 
+            "name": sensor.name, 
             "temperature": round(CONVERT_TEMP(temperature), 1), 
             "humidity": humidity,
             "dew point": round(CONVERT_TEMP(GET_DEW_POINT(temperature, humidity)), 1)
