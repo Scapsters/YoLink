@@ -178,3 +178,254 @@ class MultiOutletGetStateData(BUDPResponse):
         self.delays_off: int = data["delays"][0]["off"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]
+        
+class LockGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        state                (str)  : State of lock, ["locked", "unlocked"].
+        battery              (int)  : Level of device's battery, 0 to 4 means empty to full.
+        version              (str)  : Firmware Version of device.
+        tz                   (int)  : Timezone of device. -12 ~ 12.
+    """
+
+    def __init__(self, data: dict):
+        self.state: str = data["state"]["state"]
+        self.battery: int = data["state"]["battery"]
+        self.version: str = data["version"]
+        self.tz: int = data["tz"]
+        
+class OutletGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        state                (str)  : State of device, ["closed", "open"].
+        delay_on             (int)  : The remain time of Delay ON; Unit of minute; 0 is OFF.
+        delay_off            (int)  : The remain time of Delay OFF; Unit of minute; 0 is OFF.
+        power                (Optional[int]) : Current Power. If device does not support it, it will be 0.
+        version              (str)  : Firmware Version of device.
+        tz                   (int)  : Timezone of device. -12 ~ 12.
+    """
+
+    def __init__(self, data: dict):
+        self.state: str = data["state"]
+        self.delay_on: int = data["delay"]["on"]
+        self.delay_off: int = data["delay"]["off"]
+        self.power: int | None = data.get("power")
+        self.version: str = data["version"]
+        self.tz: int = data["tz"]
+        
+class SpeakerHubGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        version                (str)  : Hub's Version.
+        wifi_enable            (bool) : Is WiFi Connected.
+        wifi_ssid              (str)  : Current connected Wi-Fi.
+        wifi_ip                (str)  : Current IP of Wi-Fi.
+        wifi_gateway           (str)  : Current Gateway of Wi-Fi.
+        wifi_mask              (str)  : Current Subnet Mask of Wi-Fi.
+        eth_enable             (bool) : Is Ethernet Connected.
+        options_volume         (int)  : Global volume of device.
+        options_enableBeep     (bool) : Is beep enabled. True means the device will make a beep when performing some actions, such as startup, modify settings.
+        options_mute           (bool) : Is mute mode enabled. True means device will not make any sound, even if you receive a message.
+    """
+
+    def __init__(self, data: dict):
+        self.version: str = data["version"]
+        self.wifi_enable: bool = data["wifi"]["enable"]
+        self.wifi_ssid: str = data["wifi"]["ssid"]
+        self.wifi_ip: str = data["wifi"]["ip"]
+        self.wifi_gateway: str = data["wifi"]["gateway"]
+        self.wifi_mask: str = data["wifi"]["mask"]
+        self.eth_enable: bool = data["eth"]["enable"]
+        self.options_volume: int = data["options"]["volume"]
+        self.options_enableBeep: bool = data["options"]["enableBeep"]
+        self.options_mute: bool = data["options"]["mute"]
+        
+class ManipulatorGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        state                (str)  : Current state of device, ["closed", "open"].
+        delay_on             (Optional[int]) : The remain time of Delay ON; Unit of minute; 0 is OFF.
+        delay_off            (Optional[int]) : The remain time of Delay OFF; Unit of minute; 0 is OFF.
+        openRemind           (Optional[int]) : Time to remind when device keeps open. 0 is disabled.
+        version              (str)  : Firmware Version of device.
+        tz                   (int)  : Timezone of device. -12 ~ 12.
+    """
+
+    def __init__(self, data: dict):
+        self.state: str = data["state"]
+        self.delay_on: int | None = data["delay"].get("on")
+        self.delay_off: int | None = data["delay"].get("off")
+        self.openRemind: int | None = data.get("openRemind")
+        self.version: str = data["version"]
+        self.tz: int = data["tz"]
+        
+class VibrationSensorGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        online               (bool)  : Is device online.
+        state                (str)   : State of this device, ["normal", "alert"].
+        battery              (str)   : Level of device's battery, 0 to 4 means empty to full.
+        alertInterval        (Optional[int]) : Interval of Continuous Alert.
+        noVibrationDelay     (Optional[int]) : Time to enter No-Vibration state.
+        version              (str)   : Firmware Version of device.
+        reportAt             (str)   : Time of reported.
+        deviceId             (str)   : ID of device.
+    """
+
+    def __init__(self, data: dict):
+        self.online: bool = data["state"]["online"]
+        self.state: str = data["state"]["state"]
+        self.battery: str = data["state"]["battery"]
+        self.alertInterval: int | None = data["state"].get("alertInterval")
+        self.noVibrationDelay: int | None = data["state"].get("noVibrationDelay")
+        self.version: str = data["state"]["version"]
+        self.reportAt: str = data["reportAt"]
+        self.deviceId: str = data["deviceId"]
+        
+class MotionSensorGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        online               (bool)  : Is device online.
+        state                (str)   : State of this device, ["normal", "alert"].
+        battery              (str)   : Level of device's battery, 0 to 4 means empty to full.
+        alertInterval        (Optional[int]) : Interval of Continuous Alert.
+        ledAlarm             (Optional[bool]) : Is LED blink when motion detected.
+        nomotionDelay        (Optional[int]) : Time to enter No-Motion state.
+        version              (str)   : Firmware Version of device.
+        reportAt             (str)   : Time of reported.
+        deviceId             (str)   : ID of device.
+    """
+
+    def __init__(self, data: dict):
+        self.online: bool = data["state"]["online"]
+        self.state: str = data["state"]["state"]
+        self.battery: str = data["state"]["battery"]
+        self.alertInterval: int | None = data["state"].get("alertInterval")
+        self.ledAlarm: bool | None = data["state"].get("ledAlarm")
+        self.nomotionDelay: int | None = data["state"].get("nomotionDelay")
+        self.version: str = data["state"]["version"]
+        self.reportAt: str = data["reportAt"]
+        self.deviceId: str = data["deviceId"]
+        
+class SmartRemoterGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        event                (Optional[dict]) : The last reported event.
+        event_keyMask        (int)            : Triggered keys of event. Bits 0-7 means keys 0-7.
+        event_type           (str)            : The type of event, ["Press", "LongPress"].
+        battery              (int)            : Level of device's battery, 0 to 4 means empty to full.
+        version              (str)            : Firmware Version of device.
+        reportAt             (str)            : Time of reported.
+        deviceId             (str)            : ID of device.
+    """
+
+    def __init__(self, data: dict):
+        self.event: dict | None = data["state"].get("event")
+        self.event_keyMask: int = data["state"]["event"]["keyMask"] if self.event else None
+        self.event_type: str = data["state"]["event"]["type"] if self.event else None
+        self.battery: int = data["state"]["battery"]
+        self.version: str = data["state"]["version"]
+        self.reportAt: str = data["reportAt"]
+        self.deviceId: str = data["deviceId"]
+        
+class HubGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        version                (str)  : Hub's Version.
+        wifi_enable            (bool) : Is WiFi Connected.
+        wifi_ssid              (str)  : Current connected Wi-Fi.
+        wifi_ip                (str)  : Current IP of Wi-Fi.
+        wifi_gateway           (str)  : Current Gateway of Wi-Fi.
+        wifi_mask              (str)  : Current Subnet Mask of Wi-Fi.
+        eth_enable             (bool) : Is Ethernet Connected.
+        eth_ip                 (str)  : Current IP of Ethernet.
+        eth_gateway            (str)  : Current Gateway of Ethernet.
+        eth_mask               (str)  : Current Subnet Mask of Ethernet.
+    """
+
+    def __init__(self, data: dict):
+        self.version: str = data["version"]
+        self.wifi_enable: bool = data["wifi"]["enable"]
+        self.wifi_ssid: str = data["wifi"]["ssid"]
+        self.wifi_ip: str = data["wifi"]["ip"]
+        self.wifi_gateway: str = data["wifi"]["gateway"]
+        self.wifi_mask: str = data["wifi"]["mask"]
+        self.eth_enable: bool = data["eth"]["enable"]
+        self.eth_ip: str = data["eth"]["ip"]
+        self.eth_gateway: str = data["eth"]["gateway"]
+        self.eth_mask: str = data["eth"]["mask"]
+        
+class LeakSensorGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        online               (bool)  : Is device online.
+        state                (str)   : State of this device, ["normal", "alert"].
+        battery              (str)   : Level of device's battery, 0 to 4 means empty to full.
+        interval             (Optional[int]) : Interval of Continuous Alert.
+        version              (str)   : Firmware Version of device.
+        reportAt             (str)   : Time of reported.
+        deviceId             (str)   : ID of device.
+    """
+
+    def __init__(self, data: dict):
+        self.online: bool = data["state"]["online"]
+        self.state: str = data["state"]["state"]
+        self.battery: str = data["state"]["battery"]
+        self.interval: int | None = data["state"].get("interval")
+        self.version: str = data["state"]["version"]
+        self.reportAt: str = data["reportAt"]
+        self.deviceId: str = data["deviceId"]
+        
+class SwitchGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        state                (str)  : State of device, ["closed", "open"].
+        delay_on             (int)  : The remain time of Delay ON; Unit of minute; 0 is OFF.
+        delay_off            (int)  : The remain time of Delay OFF; Unit of minute; 0 is OFF.
+        version              (str)  : Firmware Version of device.
+        tz                   (int)  : Timezone of device. -12 ~ 12.
+    """
+
+    def __init__(self, data: dict):
+        self.state: str = data["state"]
+        self.delay_on: int = data["delay"]["on"]
+        self.delay_off: int = data["delay"]["off"]
+        self.version: str = data["version"]
+        self.tz: int = data["tz"]
+        
+class LockGetStateData(BUDPResponse):
+    """
+    Represents the data of a BUDP data packet for the YoLink API.
+
+    Attributes:
+        state                (str)  : State of lock, ["locked", "unlocked"].
+        battery              (int)  : Level of device's battery, 0 to 4 means empty to full.
+        version              (str)  : Firmware Version of device.
+        tz                   (int)  : Timezone of device. -12 ~ 12.
+    """
+
+    def __init__(self, data: dict):
+        self.state: str = data["state"]["state"]
+        self.battery: int = data["state"]["battery"]
+        self.version: str = data["version"]
+        self.tz: int = data["tz"]
