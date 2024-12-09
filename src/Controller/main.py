@@ -1,13 +1,14 @@
 from collections import OrderedDict
-import YoLink_Controller
-from YoLink_Controller import YoLinkController
-from persistence import save
+import src.Controller.YoLink_Controller as YoLink_Controller
+from src.Controller.YoLink_Controller import YoLinkController
+from src.Api.persistence import save
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
 # Approximation from https://iridl.ldeo.columbia.edu/dochelp/QA/Basic/dewpoint.html. "fairly accurate for relative humidity values above 50%"
 GET_DEW_POINT = lambda temperature, humidity: temperature - ((100 - humidity )/5)
 USE_FAHRENHEIT = False
+CONVERT_TEMP = lambda temp: temp * 9/5 + 32 if USE_FAHRENHEIT else temp
 SENSORS_WITH_DEWPOINT = {"THSensor"}
      
 def main() -> None:
@@ -102,9 +103,9 @@ def poll_sensors(sensors: list, controller: YoLinkController):
         humidity = sensor_data["state"]["humidity"]
         information = OrderedDict({ # Use an ordered dict to maintain order in csv file
             "name": sensor["name"], 
-            "temperature": round(temperature * 9/5 + 32 if USE_FAHRENHEIT else temperature, 1), 
+            "temperature": round(CONVERT_TEMP(temperature), 1), 
             "humidity": humidity,
-            "dew point": round(GET_DEW_POINT(temperature, humidity) * 9/5 + 32 if USE_FAHRENHEIT else temperature, 1)
+            "dew point": round(CONVERT_TEMP(GET_DEW_POINT(temperature, humidity)), 1)
         })
         print("{: <35} {: <6} {: <6} {: <6}".format(*information.values()))
         
