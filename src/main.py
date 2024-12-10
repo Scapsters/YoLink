@@ -2,14 +2,14 @@ from collections import OrderedDict
 from typing import Dict
 from Controller.YoLink_Controller import YoLinkController
 from Api.persistence import save
-from Interfaces.BUDPResponses import HomeGetDeviceListData, THSensorGetStateData
+from Interfaces.BUDPResponses import HomeGetDeviceListData, MethodNames, THSensorGetStateData
 from Interfaces.Device import Device
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
 # Approximation from https://iridl.ldeo.columbia.edu/dochelp/QA/Basic/dewpoint.html. "fairly accurate for relative humidity values above 50%"
 GET_DEW_POINT = lambda temperature, humidity: temperature - ((100 - humidity )/5)
-USE_FAHRENHEIT = False
+USE_FAHRENHEIT = True
 CONVERT_TEMP = lambda temp: temp * 9/5 + 32 if USE_FAHRENHEIT else temp
 SENSORS_WITH_DEWPOINT = {"THSensor"}
      
@@ -19,7 +19,7 @@ def main() -> None:
     controller: YoLinkController = YoLinkController()
     
     # Get connected devices
-    devices_data = HomeGetDeviceListData(controller.make_request("Home.getDeviceList")).data # TODO This should be casting not constructing
+    devices_data: HomeGetDeviceListData = controller.make_request(MethodNames.HOME_GET_DEVICE_LIST).data # TODO This should be casting not constructing
     devices: list[Device] = devices_data.devices
     
     # Create a list of every type of device
@@ -95,9 +95,9 @@ def poll_sensors(sensors: list[Device], controller: YoLinkController):
         
     for sensor in sensors:
         sensor_data: THSensorGetStateData = controller.make_request(
-            method_name = "getState", 
+            method_name = MethodNames.THSENSOR_GET_STATE, 
             device = sensor
-        )
+        ).data
         
         # Access, process, and show data
         temperature = sensor_data.temperature

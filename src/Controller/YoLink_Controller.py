@@ -4,7 +4,7 @@ from datetime import datetime
 
 from Interfaces.Device import Device
 
-from Interfaces.BUDPResponses import BUDPResponse, create_response
+from Interfaces.BUDPResponses import BUDPResponse, MethodNames, get_response_type
 from Interfaces.Device import Device
 
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
@@ -83,7 +83,7 @@ class YoLinkController:
 		self.token_expiration_time = response["expires_in"] + self.get_timestamp()
 	
 	# Follows BDDP property list at http://doc.yosmart.com/docs/protocol/datapacket/#BDDP
-	def make_request(self, method_name: str, msgid: str | None = None, device: Device | None = None, params = None) -> BUDPResponse:
+	def make_request(self, method_name: MethodNames, msgid: str | None = None, device: Device | None = None, params = None) -> BUDPResponse:
 		"""
 		Makes a request to the YoLink API with the given parameters. Returns the data from the response.
 
@@ -94,7 +94,6 @@ class YoLinkController:
 			params 			(_type_, optional):   Parameters. Required when specified by the method.
 
 		Raises:
-			IncompleteArgumentsError: Not all required arguments were provided. The error message will specify which arguments are missing. Required arguments can vary depending on other arguments
 			ConnectionError: There was an error connecting to the YoLink API. The error message will specify the error code.
 
 		Returns:
@@ -106,7 +105,7 @@ class YoLinkController:
 			"Authorization": f'Bearer {self.access_token}'
 		}
 		data = json.dumps({
-			"method": method_name,
+			"method": method_name.value,
 			"time": self.get_timestamp(),
 			"msgid": msgid,
 			"targetDevice": device.deviceId if device else None,
@@ -115,10 +114,11 @@ class YoLinkController:
 		})
 		
 		# Make and return data from request unless there is an error
-		response = requests.post(API_URL, headers=headers, data=data).json()
-		if response["code"] != "000000":
+		ResponseType = get_response_type(device.type if device else NO_DEVICE, method_name)
+		response = BUDPResponse(requests.post(API_URL, headers=headers, data=data).json(), ResponseType)
+		if response.code != "000000":
 			raise ConnectionError(f'code {response["code"]}')
-		return create_response(device.type if device else NO_DEVICE, method_name, response["data"])
+		return response
 
 	def get_timestamp(self) -> int:
 		return int(datetime.now().timestamp())

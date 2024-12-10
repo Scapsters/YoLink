@@ -1,17 +1,55 @@
-from abc import ABC
+from abc import ABC, abstractclassmethod, abstractmethod
 from typing import List
+from enum import Enum
 
 from Interfaces.Device import Device
 
-class BUDPResponse(ABC):
+class MethodNames(Enum):
+    THSENSOR_GET_STATE = "THSensor.getState"
+    WATERMETERCONTROLLER_GET_STATE = "WaterMeterController.getState"
+    DOORSENSOR_GET_STATE = "DoorSensor.getState"
+    INFRAREDREMOTER_GET_STATE = "InfraredRemoter.getState"
+    MULTIOUTLET_GET_STATE = "MultiOutlet.getState"
+    LOCK_GET_STATE = "Lock.getState"
+    OUTLET_GET_STATE = "Outlet.getState"
+    SPEAKERHUB_GET_STATE = "SpeakerHub.getState"
+    MANIPULATOR_GET_STATE = "Manipulator.getState"
+    VIBRATIONSENSOR_GET_STATE = "VibrationSensor.getState"
+    MOTIONSENSOR_GET_STATE = "MotionSensor.getState"
+    SMARTREMOTER_GET_STATE = "SmartRemoter.getState"
+    HUB_GET_STATE = "Hub.getState"
+    LEAKSENSOR_GET_STATE = "LeakSensor.getState"
+    SWITCH_GET_STATE = "Switch.getState"
+    HOME_GET_DEVICE_LIST = "Home.getDeviceList"
+    
+class BUDPResponse():
     """
-    Abstract class for BUDP responses of various sensor types.
+    Class to represent common data between BUDPResponses. Specifics lie within the data.
     """
 
+    def __init__(self, responseJson: dict, ResponseType: type):
+        self.time = responseJson["time"]
+        self.method = responseJson["method"]
+        self.msgid = responseJson["msgid"]
+        self.code = responseJson["code"]
+        self.desc = responseJson.get("desc")
+        self.data: BUDPResponseData = ResponseType(responseJson.get("data"))
+
+class BUDPResponseData(ABC):
+    
+    @abstractmethod
     def __init__(self, data: dict):
-        self.data = data
-
-def create_response(sensor_type: str, method: str, data: dict) -> BUDPResponse:
+        pass
+    
+    @abstractmethod
+    def print_data(self):
+        pass
+    
+    @abstractmethod
+    def print_data_header(self):
+        pass
+    
+def get_response_type(sensor_type: str, method: MethodNames) -> type:
     """
     Factory method to create a BUDPResponse object based on the sensor type and method.
 
@@ -23,31 +61,28 @@ def create_response(sensor_type: str, method: str, data: dict) -> BUDPResponse:
     Returns:
     BUDPResponse: The response object.
     """
-    print(sensor_type, method)
-    response_classes: dict[tuple[str, str], type] = {
-        ("THSensor", "THSensor.getState"): THSensorGetStateData,
-        ("WaterMeterController", "WaterMeterController.getState"): WaterMeterControllerGetStateData,
-        ("DoorSensor", "DoorSensor.getState"): DoorSensorGetStateData,
-        ("InfraredRemoter", "InfraredRemoter.getState"): InfraredRemoterGetStateData,
-        ("MultiOutlet", "MultiOutlet.getState"): MultiOutletGetStateData,
-        ("Lock", "Lock.getState"): LockGetStateData,
-        ("Outlet", "Outlet.getState"): OutletGetStateData,
-        ("SpeakerHub", "SpeakerHub.getState"): SpeakerHubGetStateData,
-        ("Manipulator", "Manipulator.getState"): ManipulatorGetStateData,
-        ("VibrationSensor", "VibrationSensor.getState"): VibrationSensorGetStateData,
-        ("MotionSensor", "MotionSensor.getState"): MotionSensorGetStateData,
-        ("SmartRemoter", "SmartRemoter.getState"): SmartRemoterGetStateData,
-        ("Hub", "Hub.getState"): HubGetStateData,
-        ("LeakSensor", "LeakSensor.getState"): LeakSensorGetStateData,
-        ("Switch", "Switch.getState"): SwitchGetStateData,
-        ("No Device", "Home.getDeviceList"): HomeGetDeviceListData,
+    response_classes: dict[tuple[str, MethodNames], type] = {
+        ("THSensor", MethodNames.THSENSOR_GET_STATE): THSensorGetStateData,
+        ("WaterMeterController", MethodNames.WATERMETERCONTROLLER_GET_STATE): WaterMeterControllerGetStateData,
+        ("DoorSensor", MethodNames.DOORSENSOR_GET_STATE): DoorSensorGetStateData,
+        ("InfraredRemoter", MethodNames.INFRAREDREMOTER_GET_STATE): InfraredRemoterGetStateData,
+        ("MultiOutlet", MethodNames.MULTIOUTLET_GET_STATE): MultiOutletGetStateData,
+        ("Lock", MethodNames.LOCK_GET_STATE): LockGetStateData,
+        ("Outlet", MethodNames.OUTLET_GET_STATE): OutletGetStateData,
+        ("SpeakerHub", MethodNames.SPEAKERHUB_GET_STATE): SpeakerHubGetStateData,
+        ("Manipulator", MethodNames.MANIPULATOR_GET_STATE): ManipulatorGetStateData,
+        ("VibrationSensor", MethodNames.VIBRATIONSENSOR_GET_STATE): VibrationSensorGetStateData,
+        ("MotionSensor", MethodNames.MOTIONSENSOR_GET_STATE): MotionSensorGetStateData,
+        ("SmartRemoter", MethodNames.SMARTREMOTER_GET_STATE): SmartRemoterGetStateData,
+        ("Hub", MethodNames.HUB_GET_STATE): HubGetStateData,
+        ("LeakSensor", MethodNames.LEAKSENSOR_GET_STATE): LeakSensorGetStateData,
+        ("Switch", MethodNames.SWITCH_GET_STATE): SwitchGetStateData,
+        ("No Device", MethodNames.HOME_GET_DEVICE_LIST): HomeGetDeviceListData,
     }
 
-    try:
-        return response_classes[(sensor_type, method)](data)
-    except KeyError:
-        raise ValueError("Unknown sensor type or method.")
-class HomeGetDeviceListData(BUDPResponse):
+    return response_classes[(sensor_type, method)]
+
+class HomeGetDeviceListData(BUDPResponseData):
     """
     Represents the response of the Home.getDeviceList method in the YoLink API.
 
@@ -56,8 +91,11 @@ class HomeGetDeviceListData(BUDPResponse):
     """
 
     def __init__(self, data: dict):
-        self.devices: List[Device] = [Device(device_data) for device_data in data]
-class HubGetDeviceListData(BUDPResponse):
+        print(data)
+        print(type(data))
+        self.devices: List[Device] = [Device(device_data) for device_data in data.get("devices")]
+
+class HubGetDeviceListData(BUDPResponseData):
     """
     Represents the response of the Hub.getDeviceList method in the YoLink API.
 
@@ -68,7 +106,7 @@ class HubGetDeviceListData(BUDPResponse):
     def __init__(self, data: dict):
         self.devices: List[Device] = [Device(device) for device in data["devices"]]   
            
-class THSensorGetStateData(BUDPResponse):
+class THSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -90,7 +128,7 @@ class THSensorGetStateData(BUDPResponse):
     """
 
     def __init__(self, data: dict):
-        self.online: bool = data["state"]["online"]
+        self.online: bool = data["online"]
         self.state: str = data["state"]["state"]
         self.battery: str = data["state"]["battery"]
         self.interval: int | None = data["state"].get("interval")
@@ -103,7 +141,8 @@ class THSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]
-class WaterMeterControllerGetStateData(BUDPResponse):
+
+class WaterMeterControllerGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -175,7 +214,8 @@ class WaterMeterControllerGetStateData(BUDPResponse):
         self.temperature: float = data["temperature"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]
-class DoorSensorGetStateData(BUDPResponse):
+
+class DoorSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -199,7 +239,8 @@ class DoorSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]
-class InfraredRemoterGetStateData(BUDPResponse):
+
+class InfraredRemoterGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -215,7 +256,8 @@ class InfraredRemoterGetStateData(BUDPResponse):
         self.keys: list[bool] = data["keys"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]
-class MultiOutletGetStateData(BUDPResponse):
+
+class MultiOutletGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -233,7 +275,8 @@ class MultiOutletGetStateData(BUDPResponse):
         self.delays_off: int = data["delays"][0]["off"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]      
-class LockGetStateData(BUDPResponse):
+
+class LockGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -249,7 +292,8 @@ class LockGetStateData(BUDPResponse):
         self.battery: int = data["state"]["battery"]
         self.version: str = data["version"]
         self.tz: int = data["tz"]    
-class OutletGetStateData(BUDPResponse):
+
+class OutletGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -269,7 +313,8 @@ class OutletGetStateData(BUDPResponse):
         self.power: int | None = data.get("power")
         self.version: str = data["version"]
         self.tz: int = data["tz"]     
-class SpeakerHubGetStateData(BUDPResponse):
+
+class SpeakerHubGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -297,7 +342,8 @@ class SpeakerHubGetStateData(BUDPResponse):
         self.options_volume: int = data["options"]["volume"]
         self.options_enableBeep: bool = data["options"]["enableBeep"]
         self.options_mute: bool = data["options"]["mute"]     
-class ManipulatorGetStateData(BUDPResponse):
+
+class ManipulatorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -317,7 +363,8 @@ class ManipulatorGetStateData(BUDPResponse):
         self.openRemind: int | None = data.get("openRemind")
         self.version: str = data["version"]
         self.tz: int = data["tz"]     
-class VibrationSensorGetStateData(BUDPResponse):
+
+class VibrationSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -341,7 +388,8 @@ class VibrationSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]     
-class MotionSensorGetStateData(BUDPResponse):
+
+class MotionSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -367,7 +415,8 @@ class MotionSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]    
-class SmartRemoterGetStateData(BUDPResponse):
+
+class SmartRemoterGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -389,7 +438,8 @@ class SmartRemoterGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]     
-class HubGetStateData(BUDPResponse):
+
+class HubGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -417,7 +467,8 @@ class HubGetStateData(BUDPResponse):
         self.eth_ip: str = data["eth"]["ip"]
         self.eth_gateway: str = data["eth"]["gateway"]
         self.eth_mask: str = data["eth"]["mask"]      
-class LeakSensorGetStateData(BUDPResponse):
+
+class LeakSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
@@ -439,7 +490,8 @@ class LeakSensorGetStateData(BUDPResponse):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]      
-class SwitchGetStateData(BUDPResponse):
+
+class SwitchGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
