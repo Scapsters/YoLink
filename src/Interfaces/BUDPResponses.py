@@ -108,9 +108,7 @@ class HubGetDeviceListData(BUDPResponseData):
 
     def __init__(self, data: dict):
         self.devices: List[Device] = [Device(device) for device in data["devices"]] 
-        
-      
-           
+               
 class THSensorGetStateData(BUDPResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
