@@ -27,13 +27,13 @@ class BUDPResponse():
     Class to represent common data between BUDPResponses. Specifics lie within the data.
     """
 
-    def __init__(self, responseJson: dict, ResponseType: type):
-        self.time = responseJson["time"]
-        self.method = responseJson["method"]
-        self.msgid = responseJson["msgid"]
-        self.code = responseJson["code"]
-        self.desc = responseJson.get("desc")
-        self.data: BUDPResponseData = ResponseType(responseJson.get("data"))
+    def __init__(self, response_json: dict, ResponseType: type):
+        self.time = response_json["time"]
+        self.method = response_json["method"]
+        self.msgid = response_json["msgid"]
+        self.code = response_json["code"]
+        self.desc = response_json.get("desc")
+        self.data: BUDPResponseData = ResponseType(response_json.get("data"))
 
 class BUDPResponseData(ABC):
     
@@ -94,6 +94,9 @@ class HomeGetDeviceListData(BUDPResponseData):
         print(data)
         print(type(data))
         self.devices: List[Device] = [Device(device_data) for device_data in data.get("devices")]
+        
+    def print_data(self):
+        return 
 
 class HubGetDeviceListData(BUDPResponseData):
     """
@@ -104,7 +107,9 @@ class HubGetDeviceListData(BUDPResponseData):
     """
 
     def __init__(self, data: dict):
-        self.devices: List[Device] = [Device(device) for device in data["devices"]]   
+        self.devices: List[Device] = [Device(device) for device in data["devices"]] 
+        
+      
            
 class THSensorGetStateData(BUDPResponseData):
     """

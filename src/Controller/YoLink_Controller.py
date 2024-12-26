@@ -114,8 +114,8 @@ class YoLinkController:
 		})
 		
 		# Make and return data from request unless there is an error
-		ResponseType = get_response_type(device.type if device else NO_DEVICE, method_name)
-		response = BUDPResponse(requests.post(API_URL, headers=headers, data=data).json(), ResponseType)
+		response_type = get_response_type(device.type if device else NO_DEVICE, method_name)
+		response = BUDPResponse(requests.post(API_URL, headers=headers, data=data).json(), response_type)
 		if response.code != "000000":
 			raise ConnectionError(f'code {response["code"]}')
 		return response
