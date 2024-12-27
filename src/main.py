@@ -1,9 +1,11 @@
 from collections import OrderedDict
-from typing import Dict
+from typing import Dict, Type
 from Controller.YoLink_Controller import YoLinkController
 from Api.persistence import save
-from Interfaces.BUDPResponses import HomeGetDeviceListData, MethodNames, THSensorGetStateData
 from Interfaces.Device import Device
+from Interfaces.Responses.Devices.Home import HomeGetDeviceListData
+from Interfaces.Responses.Devices.THSensor import THSensorGetStateData
+from Interfaces.Responses.Response import MethodNames
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
@@ -19,7 +21,10 @@ def main() -> None:
     controller: YoLinkController = YoLinkController()
     
     # Get connected devices
-    devices_data: HomeGetDeviceListData = controller.make_request(MethodNames.HOME_GET_DEVICE_LIST).data # TODO This should be casting not constructing
+    devices_data: HomeGetDeviceListData = controller.make_request(
+        MethodNames.HOME_GET_DEVICE_LIST, 
+        HomeGetDeviceListData
+    ).data
     devices: list[Device] = devices_data.devices
     
     # Create a list of every type of device
@@ -53,7 +58,7 @@ def print_device_list(devices: list[Device]) -> None:
         device_information = [
             device.type, 
             device.name, 
-            device.deviceId
+            device.device_id
         ]
         print("{: <20} {: <40} {: <30}".format(*device_information))
 
@@ -94,9 +99,10 @@ def poll_sensors(sensors: list[Device], controller: YoLinkController):
     print("{: ^35} {: ^6} {: ^6} {: ^6}".format(*column_titles))
         
     for sensor in sensors:
-        sensor_data: THSensorGetStateData = controller.make_request(
+        sensor_data = controller.make_request(
             method_name = MethodNames.THSENSOR_GET_STATE, 
-            device = sensor
+            device = sensor,
+            response_type = THSensorGetStateData
         ).data
         
         # Access, process, and show data
@@ -111,7 +117,6 @@ def poll_sensors(sensors: list[Device], controller: YoLinkController):
         print("{: <35} {: <6} {: <6} {: <6}".format(*information.values()))
         
         save("THSensor", information)
-        
 
 if __name__ == "__main__":
     main()

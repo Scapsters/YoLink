@@ -3,9 +3,8 @@ import json
 from datetime import datetime
 
 from Interfaces.Device import Device
-
-from Interfaces.BUDPResponses import BUDPResponse, MethodNames, get_response_type
-from Interfaces.Device import Device
+from Interfaces.Responses.Response import MethodNames, Response, ResponseData, get_response_type
+from typing import Type, TypeVar, Generic
 
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
@@ -33,7 +32,7 @@ class YoLinkController:
 		Initialize a YoLink API Controller. Also attempts to establish an access token.
 		"""
 		# Load credentials 
-		with open("./credentials.json", "r") as file:
+		with open("./../credentials.json", "r") as file:
 			credentials = json.load(file)
 		self.user_id = credentials["user_id"]
 		self.user_key = credentials["user_key"]
@@ -83,7 +82,15 @@ class YoLinkController:
 		self.token_expiration_time = response["expires_in"] + self.get_timestamp()
 	
 	# Follows BDDP property list at http://doc.yosmart.com/docs/protocol/datapacket/#BDDP
-	def make_request(self, method_name: MethodNames, msgid: str | None = None, device: Device | None = None, params = None) -> BUDPResponse:
+	T = TypeVar('T', bound=ResponseData)
+
+	def make_request(self, 
+			method_name  : MethodNames,
+			response_type: Type[T],
+			msgid        : str | None = None,
+			device       : Device | None = None,
+			params = None
+		) -> Response[T]:
 		"""
 		Makes a request to the YoLink API with the given parameters. Returns the data from the response.
 
@@ -97,7 +104,7 @@ class YoLinkController:
 			ConnectionError: There was an error connecting to the YoLink API. The error message will specify the error code.
 
 		Returns:
-			BUDPResponse: An object representing the data from the response.
+			T: An object representing the data from the response.
 		"""
 		# Setup data
 		headers = {
@@ -108,18 +115,16 @@ class YoLinkController:
 			"method": method_name.value,
 			"time": self.get_timestamp(),
 			"msgid": msgid,
-			"targetDevice": device.deviceId if device else None,
+			"targetDevice": device.device_id if device else None,
 			"token": device.token if device else None,
 			"params": params
 		})
 		
 		# Make and return data from request unless there is an error
-		response_type = get_response_type(device.type if device else NO_DEVICE, method_name)
-		response = BUDPResponse(requests.post(API_URL, headers=headers, data=data).json(), response_type)
+		response = Response(requests.post(API_URL, headers=headers, data=data).json(), response_type)
 		if response.code != "000000":
-			raise ConnectionError(f'code {response["code"]}')
+			raise ConnectionError(f'code {response.code}')
 		return response
 
 	def get_timestamp(self) -> int:
 		return int(datetime.now().timestamp())
-  
