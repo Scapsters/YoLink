@@ -6,6 +6,9 @@ from Interfaces.Device import Device
 from Interfaces.Responses.Response import MethodNames, Response, ResponseData, get_response_type
 from typing import Type, TypeVar, Generic
 
+
+CURRENT_USER = "scott"
+
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
 NO_DEVICE = "No Device"
@@ -34,8 +37,8 @@ class YoLinkController:
 		# Load credentials 
 		with open("./../credentials.json", "r") as file:
 			credentials = json.load(file)
-		self.user_id = credentials["user_id"]
-		self.user_key = credentials["user_key"]
+		self.user_id = credentials["user_id_" + CURRENT_USER]
+		self.user_key = credentials["user_key_" + CURRENT_USER]
 		
 		# Initialize token information
 		self.access_token = None
