@@ -6,13 +6,13 @@ from Interfaces.Device import Device
 from Interfaces.Responses.Response import MethodNames, Response, ResponseData, get_response_type
 from typing import Type, TypeVar, Generic
 
-
-CURRENT_USER = "scott"
+from constants import CURRENT_USER
 
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
 NO_DEVICE = "No Device"
 
+# TODO: make the constructor take the username as a parameter
 class YoLinkController:
 	"""
 	A controller for the YoLink API. Handles requests to the API and manages access tokens.
