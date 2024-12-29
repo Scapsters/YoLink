@@ -10,7 +10,6 @@ SAVE_EXT = '.csv'
 class DatabaseCSV(Database):
     def save(self, device_type: str, header: OrderedDict[str, str|int]) -> None:
         
-        return None
         # Create filepath
         filename = f'/{device_type}-{date.today().strftime("%m-%d-%y")}'
         filepath = SAVE_DIR + filename + SAVE_EXT
