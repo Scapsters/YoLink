@@ -37,8 +37,8 @@ class YoLinkController:
 		# Load credentials 
 		with open("./../credentials.json", "r") as file:
 			credentials = json.load(file)
-		self.user_id = credentials["user_id_" + CURRENT_USER]
-		self.user_key = credentials["user_key_" + CURRENT_USER]
+		self.user_id = credentials[CURRENT_USER + "_yolink_user_id"]
+		self.user_key = credentials[CURRENT_USER + "_yolink_user_key"]
 		
 		# Initialize token information
 		self.access_token = None
