@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any, Tuple, Type, TypeVar, Generic
 from pydantic.dataclasses import dataclass
-from pydantic import BaseModel
 
 T = TypeVar('T', bound='ResponseData')
 
