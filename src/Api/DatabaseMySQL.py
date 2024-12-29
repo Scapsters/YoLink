@@ -4,7 +4,6 @@ from Interfaces.Database import Database
 from collections import OrderedDict
 import mysql
 
-from constants import CURRENT_USER
 from Interfaces.Credentials.MySQLCredentials import MySQLCredentials
 
 class DatabaseMySQL(Database):
@@ -28,13 +27,7 @@ class DatabaseMySQL(Database):
         )
         
         # Create connection
-        self.connection = self.create_connection(
-            self.credentials.database_name,
-            self.credentials.host,
-            self.credentials.port,
-            self.credentials.username,
-            self.credentials.password
-        )
+        self.connection = self.create_connection()
         
         # Test connection
         self.connection.ping()
@@ -54,16 +47,13 @@ class DatabaseMySQL(Database):
     def add_device(self, device_id, device_name, device_type, timestamp):
         return super().add_device(device_id, device_name, device_type, timestamp)
     
-    def create_connection(self, database_name, host, port, username, password):
-        with open("./../credentials.json") as file:
-            credentials = json.load(file)
-            
+    def create_connection(self):
         return mysql.connector.connect(
-            database = credentials[CURRENT_USER + "_mysql_database_name"],
-            host     = credentials[CURRENT_USER + "_mysql_host"],
-            port     = credentials[CURRENT_USER + "_mysql_port"],
-            username = credentials[CURRENT_USER + "_mysql_username"],
-            password = credentials[CURRENT_USER + "_mysql_password"],
+            database = self.credentials.database_name,
+            host     = self.credentials.host,
+            port     = self.credentials.port,
+            username = self.credentials.username,
+            password = self.credentials.password,
         )
         
     def execute_file(self, filename, params):

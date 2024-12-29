@@ -10,6 +10,8 @@ from Interfaces.Database import Database
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
+CURRENT_USER = "scott"
+
 # Approximation from https://iridl.ldeo.columbia.edu/dochelp/QA/Basic/dewpoint.html. "fairly accurate for relative humidity values above 50%"
 GET_DEW_POINT = lambda temperature, humidity: temperature - ((100 - humidity )/5)
 USE_FAHRENHEIT = True
@@ -25,10 +27,10 @@ def main() -> None:
     # TODO: Should main provide credentials? currently credentials are obtained in each class
     
     # Establish connection to MySQL Database
-    database = DatabaseMySQL("scott")
+    database = DatabaseMySQL(CURRENT_USER)
     
     # Establish connection to YoLink API
-    controller = YoLinkController()
+    controller = YoLinkController(CURRENT_USER)
     
     # Get connected devices
     devices_data: HomeGetDeviceListData = controller.make_request(

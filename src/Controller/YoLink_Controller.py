@@ -6,8 +6,6 @@ from Interfaces.Device import Device
 from Interfaces.Responses.Response import MethodNames, Response, ResponseData, get_response_type
 from typing import Type, TypeVar, Generic
 
-from constants import CURRENT_USER
-
 TOKEN_URL = 'https://api.yosmart.com/open/yolink/token'
 API_URL = 'https://api.yosmart.com/open/yolink/v2/api'
 NO_DEVICE = "No Device"
@@ -30,15 +28,15 @@ class YoLinkController:
 		refresh_token (str): The refresh token for the YoLink API.
 		token_expiration_time (int): The time at which the access token will expire.
 	"""
-	def __init__(self):
+	def __init__(self, current_user):
 		"""
 		Initialize a YoLink API Controller. Also attempts to establish an access token.
 		"""
 		# Load credentials 
 		with open("./../credentials.json", "r") as file:
 			credentials = json.load(file)
-		self.user_id = credentials[CURRENT_USER + "_yolink_user_id"]
-		self.user_key = credentials[CURRENT_USER + "_yolink_user_key"]
+		self.user_id = credentials[current_user + "_yolink_user_id"]
+		self.user_key = credentials[current_user + "_yolink_user_key"]
 		
 		# Initialize token information
 		self.access_token = None
