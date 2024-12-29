@@ -1,4 +1,5 @@
 requests
 pydantic
 types-requests
+my_sql
 mypy
