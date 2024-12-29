@@ -1,11 +1,12 @@
 from collections import OrderedDict
 from typing import Dict, Type
 from Controller.YoLink_Controller import YoLinkController
-from src.Api.persistence_csv import save
+from Api.DatabaseMySQL import DatabaseMySQL
 from Interfaces.Device import Device
 from Interfaces.Responses.Devices.Home import HomeGetDeviceListData
 from Interfaces.Responses.Devices.THSensor import THSensorGetStateData
 from Interfaces.Responses.Response import MethodNames
+from Interfaces.Database import Database
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
@@ -17,8 +18,17 @@ SENSORS_WITH_DEWPOINT = {"THSensor"}
      
 def main() -> None:
     
+    # TODO: Im realizing the interfaces folder also has plenty of concrete classes. but theyre
+    # pretty low level, and mostly dataclasses. thye can stay there probably...
+    
+    # TODO: file name consistency
+    # TODO: Should main provide credentials? currently credentials are obtained in each class
+    
+    # Establish connection to MySQL Database
+    database = DatabaseMySQL("scott")
+    
     # Establish connection to YoLink API
-    controller: YoLinkController = YoLinkController()
+    controller = YoLinkController()
     
     # Get connected devices
     devices_data: HomeGetDeviceListData = controller.make_request(
@@ -39,7 +49,7 @@ def main() -> None:
         print_device_list(devices_sorted[device_type])
         print()
     
-    poll_sensors(devices_sorted["THSensor"], controller)
+    poll_sensors(devices_sorted["THSensor"], controller, database)
 
 def print_device_list(devices: list[Device]) -> None:
     '''
@@ -87,7 +97,7 @@ def create_sorted_device_list(devices: list[Device], device_types: set[str]) -> 
     
     return devices_sorted_type
 
-def poll_sensors(sensors: list[Device], controller: YoLinkController):
+def poll_sensors(sensors: list[Device], controller: YoLinkController, database: Database):
     '''
     Not final.
     Poll the sensors and print the data. Only works for THSensors currently.
@@ -116,7 +126,7 @@ def poll_sensors(sensors: list[Device], controller: YoLinkController):
         })
         print("{: <35} {: <6} {: <6} {: <6}".format(*information.values()))
         
-        save("THSensor", information)
+        database.save("THSensor", information)
 
 if __name__ == "__main__":
     main()
