@@ -7,13 +7,15 @@ from Interfaces.Responses.Devices.Home import HomeGetDeviceListData
 from Interfaces.Responses.Devices.THSensor import THSensorGetStateData
 from Interfaces.Responses.Response import MethodNames
 from Interfaces.Database import Database
+from Interfaces.Data.Event import Event
+import pprint
 
 # Yolink API Documentation: http://doc.yosmart.com/docs
 
-CURRENT_USER = "scott"
+CURRENT_USER = "paul"
 
 # Approximation from https://iridl.ldeo.columbia.edu/dochelp/QA/Basic/dewpoint.html. "fairly accurate for relative humidity values above 50%"
-GET_DEW_POINT = lambda temperature, humidity: temperature - ((100 - humidity )/5)
+GET_DEW_POINT = lambda temperature, humidity: temperature - ((100 - humidity )/5) #TODO: indicate this value is calculated
 USE_FAHRENHEIT = True
 CONVERT_TEMP = lambda temp: temp * 9/5 + 32 if USE_FAHRENHEIT else temp
 SENSORS_WITH_DEWPOINT = {"THSensor"}
@@ -38,6 +40,10 @@ def main() -> None:
         HomeGetDeviceListData
     ).data
     devices: list[Device] = devices_data.devices
+    
+    # TODO: when database construction no longer resets each time, this will attempt to add the same devices multiple times
+    for device in devices:
+        database.add_device(device)
     
     # Create a list of every type of device
     device_types = set()
@@ -99,28 +105,57 @@ def create_sorted_device_list(devices: list[Device], device_types: set[str]) -> 
     
     return devices_sorted_type
 
-def poll_sensors(sensors: list[Device], controller: YoLinkController, database: Database):
-    '''
-    Not final.
-    Poll the sensors and print the data. Only works for THSensors currently.
-    TODO: Add support for other sensor types.
-    '''
+def poll_sensors(
+        sensors   : list[Device],
+        controller: YoLinkController,
+        database  : Database
+        ) -> None:
     
-    # Print header for data
+    # Print header for data 
     column_titles = ["Sensor name", "Temp", "%Hum.", "Dew P"]
     print("{: ^35} {: ^6} {: ^6} {: ^6}".format(*column_titles))
-        
+    
     for sensor in sensors:
+        
+        pp = pprint.PrettyPrinter(indent=4)
+
+        # FIXME: cron, jenkins*, nodered for scheduling
+        # TODO: log everything
+        
         sensor_data = controller.make_request(
             method_name = MethodNames.THSENSOR_GET_STATE, 
             device = sensor,
             response_type = THSensorGetStateData
-        ).data
+        )
+        '''
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, source,    field_name,             value 
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'code',                 000000 
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, derived,   'data',                 THSensorGetStateData()
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'desc',                 'Success'
         
-        # Access, process, and show data
+        timestamp from device, timestamp from request, 'd88b4c01000277a9', device Name, device type, api,       'deviceId from response', 'd88b4c01000277a9'
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'interval',             '60'
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'tempLimit.max',        '35'
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'tempLimit.min',        '35'
+        timestamp from device, timestamp from request, deviceId from code, device Name, device type, api,       'battery',              '4'
+        '''
+
+        pp.pprint(sensor_data.__dict__)
+        pp.pprint(sensor_data.data.__dict__)
+        
+        event = Event(
+            source_device_id = sensor.device_id,
+            timestamp = sensor_data.reportAt,
+            data_entries = sensor_data.data_entries
+        )
+        
+        # Store data
+        database.add_event_and_entries(event)
+        
+        # Show data
         temperature = sensor_data.temperature
         humidity = sensor_data.humidity
-        information = OrderedDict({ # Use an ordered dict to maintain order in csv file
+        information = OrderedDict({
             "name": sensor.name, 
             "temperature": round(CONVERT_TEMP(temperature), 1), 
             "humidity": humidity,
@@ -128,7 +163,5 @@ def poll_sensors(sensors: list[Device], controller: YoLinkController, database: 
         })
         print("{: <35} {: <6} {: <6} {: <6}".format(*information.values()))
         
-        database.save("THSensor", information)
-
 if __name__ == "__main__":
     main()

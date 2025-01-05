@@ -87,7 +87,7 @@ class YoLinkController:
 
 	def make_request(self, 
 			method_name  : MethodNames,
-			response_type: Type[T],
+			response_type: Type[T] | None = None,
 			msgid        : str | None = None,
 			device       : Device | None = None,
 			params = None
@@ -120,11 +120,17 @@ class YoLinkController:
 			"token": device.token if device else None,
 			"params": params
 		})
+  
+
+		raw_response = requests.post(API_URL, headers=headers, data=data).json()
+
+		if response_type is None:
+			return raw_response
 		
-		# Make and return data from request unless there is an error
-		response = Response(requests.post(API_URL, headers=headers, data=data).json(), response_type)
+		response = Response(raw_response, response_type)
 		if response.code != "000000":
 			raise ConnectionError(f'code {response.code}')
+	
 		return response
 
 	def get_timestamp(self) -> int:

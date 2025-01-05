@@ -1,4 +1,5 @@
 class Device():
+    
     """
     Represents the information of a device in the YoLink API.
 
@@ -11,9 +12,8 @@ class Device():
     """
 
     def __init__(self, data: dict):
-        self.device_id   = data["deviceId"]
+        self.device_id   = data["deviceId"] # TODO: This is hex, but to convert is needlessly complicated
         self.device_udid = data["deviceUDID"]
         self.token       = data["token"]
         self.name        = data["name"]
         self.type        = data["type"]
-

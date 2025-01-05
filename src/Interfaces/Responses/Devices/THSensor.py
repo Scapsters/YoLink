@@ -1,24 +1,26 @@
 from Interfaces.Responses.Response import ResponseData
+from Interfaces.Data.DataEntry import DataEntry
+from Interfaces.Data.Event import Event
 
 class THSensorGetStateData(ResponseData):
     """
     Represents the data of a BUDP data packet for the YoLink API.
 
     Attributes:
-        online               (bool) : Indicates if the device is online.
-        state                (str)  : State of the device, can be "normal" or "alert".
-        battery              (str)  : Level of the device's battery, 0 to 4 means empty to full.
-        interval     (Optional[int]): Interval of Continuous Alert.
-        temperature          (float): Current temperature.
-        humidity             (float): Current humidity.
-        tempLimit            (dict) : Normal temperature range, alert when temperature is out of it.
-        humidityLimit        (float): Normal humidity range, alert when humidity is out of it.
-        tempCorrection       (float): Calibration of temperature.
-        humidityCorrection   (float): Calibration of humidity.
-        version              (str)  : Firmware version of the device.
-        reportAt             (str)  : Time of the report.
-        deviceId             (str)  : ID of the device.
-        interval is omitted due to it being optional in the documentation.
+        online               (bool): Indicates if the device is online.
+        state                (str) : State of the device, can be "normal" or "alert".
+        battery              (str) : Level of the device's battery, 0 to 4 means empty to full.
+        interval     (Optional[int])          : Interval of Continuous Alert.
+        temperature          (float)          : Current temperature.
+        humidity             (float)          : Current humidity.
+        tempLimit            (dict)           : Normal temperature range, alert when temperature is out of it.
+        humidityLimit        (float)          : Normal humidity range,    alert when humidity is out of it.
+        tempCorrection       (float)          : Calibration of temperature.
+        humidityCorrection   (float)          : Calibration of humidity.
+        version              (str)            : Firmware version of the device.
+        reportAt             (str)            : Time of the report.
+        deviceId             (str)            : ID of the device.
+        data_entries         (List[DataEntry]): List of DataEntry objects.
     """
 
     def __init__(self, data: dict):
@@ -35,3 +37,6 @@ class THSensorGetStateData(ResponseData):
         self.version: str = data["state"]["version"]
         self.reportAt: str = data["reportAt"]
         self.deviceId: str = data["deviceId"]
+        
+        self.create_data_entries(["temperature", "humidity"])
+        

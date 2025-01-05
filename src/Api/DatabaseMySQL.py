@@ -2,13 +2,18 @@ import json
 import mysql.connector
 from Interfaces.Database import Database
 from collections import OrderedDict
+from datetime import  *
 import mysql
 
+from Interfaces.Data.Event import Event
+from Interfaces.Device import Device
 from Interfaces.Credentials.MySQLCredentials import MySQLCredentials
 
 class DatabaseMySQL(Database):
     
     def __init__(self, current_user):
+        
+        # TODO: rename parent folder to db or something
         
         # TODO: should these credential details be kept as class attributes?
         # This would allow for recreation of a connection without needing to reread the file.
@@ -29,9 +34,6 @@ class DatabaseMySQL(Database):
         # Create connection
         self.connection = self.create_connection()
         
-        # Test connection
-        self.connection.ping()
-        
         self.reset() # TODO: remove this at some point
         self.setup()
     
@@ -41,11 +43,47 @@ class DatabaseMySQL(Database):
     def reset(self):
         self.execute_file("./../my_sql/sql/reset.sql", { "schema_name": self.credentials.database_name })
       
-    def save(self, device_type: str, header: OrderedDict[str, str|int]) -> None:
+    def add_event_and_entries(self, event: Event) -> None:
         cursor = self.connection.cursor()
+        cursor.execute("""
+            INSERT INTO events
+                (event_source_device_id, event_timestamp) 
+                VALUES (%(source_device_id)s, %(timestamp)s)
+        """, {
+            "source_device_id": event.source_device_id,
+            "timestamp": event.timestamp
+        })
+        event_id = cursor.lastrowid # i dont like mysql anymore
         
-    def add_device(self, device_id, device_name, device_type, timestamp):
-        return super().add_device(device_id, device_name, device_type, timestamp)
+        for data_entry in event.data_entries:
+            cursor.execute("""
+                INSERT INTO data
+                    (event_id, data_name, data_value)
+                    VALUES (%(event_id)s, %(name)s, %(value)s)
+            """, {
+                "event_id": event_id,
+                "name": data_entry.name,
+                "value": data_entry.value
+            })
+        self.connection.commit()
+        
+    def save(self):
+        pass
+    
+    def add_device(self, device: Device):
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            INSERT INTO devices
+                (device_id, device_type, device_name, device_token, device_timestamp)
+                VALUES (%(device_id)s, %(device_type)s, %(device_name)s, %(device_token)s, %(device_timestamp)s)
+        """, {
+            "device_id": device.device_id,
+            "device_name": device.name,
+            "device_type": device.type,
+            "device_token": device.token,
+            "device_timestamp": datetime.now()
+        })
+        self.connection.commit()
     
     def create_connection(self):
         return mysql.connector.connect(
@@ -66,6 +104,7 @@ class DatabaseMySQL(Database):
                 print('executing: ' + statement)
                 print(params)
                 self.connection.cursor().execute(statement)
+        self.connection.commit()
                 
         
         

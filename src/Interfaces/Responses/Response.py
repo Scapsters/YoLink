@@ -2,6 +2,9 @@ from enum import Enum
 from typing import Any, Tuple, Type, TypeVar, Generic
 from pydantic.dataclasses import dataclass
 
+from Interfaces.Data.DataEntry import DataEntry
+from Interfaces.Data.Event import Event
+
 T = TypeVar('T', bound='ResponseData')
 
 class Response(Generic[T]):
@@ -40,6 +43,18 @@ class ResponseData():
     def print_data_row(self, row: Tuple[str, Any]):
         raise NotImplementedError()
     
+    def create_data_entries(self, values_to_record: list[str]) -> None:
+        '''
+        The calling object must have the properties listed in values_to_record.
+        '''
+        self.data_entries = [
+            DataEntry(
+                name = value,
+                value = getattr(self, value),
+            )
+            for value in values_to_record
+        ]
+    
 from Interfaces.Responses.Devices.DoorSensor import DoorSensorGetStateData
 from Interfaces.Responses.Devices.THSensor import THSensorGetStateData
 from Interfaces.Responses.Devices.WaterMeterController import WaterMeterControllerGetStateData
@@ -57,8 +72,10 @@ from Interfaces.Responses.Devices.LeakSensor import LeakSensorGetStateData
 from Interfaces.Responses.Devices.Switch import SwitchGetStateData
 from Interfaces.Responses.Devices.Home import HomeGetDeviceListData
 
+# TODO: find better way
 class MethodNames(Enum):
     THSENSOR_GET_STATE = "THSensor.getState"
+    THSENSOR_GET_ACTIVITY_LOGS = "THSensor.getActivityLogs"
     WATERMETERCONTROLLER_GET_STATE = "WaterMeterController.getState"
     DOORSENSOR_GET_STATE = "DoorSensor.getState"
     INFRAREDREMOTER_GET_STATE = "InfraredRemoter.getState"
