@@ -1,6 +1,5 @@
 import json
 import mysql.connector
-from Interfaces.Database import Database
 from collections import OrderedDict
 from datetime import  *
 import mysql
@@ -9,7 +8,7 @@ from Interfaces.Data.Event import Event
 from Interfaces.Device import Device
 from Interfaces.Credentials.MySQLCredentials import MySQLCredentials
 
-class DatabaseMySQL(Database):
+class DatabaseMySQL():
     
     def __init__(self, current_user):
         

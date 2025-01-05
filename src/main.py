@@ -6,7 +6,6 @@ from Interfaces.Device import Device
 from Interfaces.Responses.Devices.Home import HomeGetDeviceListData
 from Interfaces.Responses.Devices.THSensor import THSensorGetStateData
 from Interfaces.Responses.Response import MethodNames
-from Interfaces.Database import Database
 from Interfaces.Data.Event import Event
 import pprint
 
@@ -108,7 +107,7 @@ def create_sorted_device_list(devices: list[Device], device_types: set[str]) -> 
 def poll_sensors(
         sensors   : list[Device],
         controller: YoLinkController,
-        database  : Database
+        database  : DatabaseMySQL
         ) -> None:
     
     # Print header for data 
